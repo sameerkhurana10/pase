@@ -12,6 +12,8 @@ import os
 import random
 import numpy as np
 from collections import defaultdict
+import io
+import kaldi_io as kio
 
 
 class DictCollater(object):
@@ -202,16 +204,31 @@ class WavDataset(Dataset):
                     nwname = os.path.join(noise_folder, uttname)
                     self.retrieve_cache(nwname, self.noise_cache)
 
-
     def __len__(self):
         return len(self.wavs)
+
+    def read_wav(self, file_or_fd, wav_sr=16000):
+        """ [wav] = read_mat(file_or_fd)
+         Reads a single wavefile, supports binary only
+         file_or_fd : file, gzipped file, pipe or opened file descriptor.
+        """
+        fd = kio.open_or_fd(file_or_fd)
+        try:
+            wav, sr = sf.read(io.BytesIO(fd.read()))
+            assert sr == wav_sr
+            wav = wav.astype('float32')
+        finally:
+            if fd is not file_or_fd:
+                fd.close()
+        return wav, sr
 
     def retrieve_cache(self, fname, cache):
         if (self.cache_on_load or self.preload_wav) and fname in cache:
             return cache[fname]
         else:
-            wav, rate = sf.read(fname)
-            wav = wav.astype(np.float32)
+            # wav, rate = sf.read(fname)
+            # wav = wav.astype(np.float32)
+            wav, rate = self.read_wav(fname)
             if self.cache_on_load:
                 cache[fname] = wav
             return wav

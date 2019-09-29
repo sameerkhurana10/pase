@@ -10,6 +10,7 @@ import numpy as np
 import random
 import timeit
 import os
+from tqdm import tqdm
 
 
 class Waveminionet(Model):
@@ -295,6 +296,7 @@ class Waveminionet(Model):
         print('Looping for {} epochs: '.format(epoch))
 
         for epoch_ in range(epoch_beg, epoch_beg + epoch):
+            print("++++++ EPOCH %d ++++++" % epoch_)
             self.train()
             timings = []
             beg_t = timeit.default_timer()
@@ -303,7 +305,7 @@ class Waveminionet(Model):
                 zweight = zinit_weight
 
             iterator = iter(dloader)
-            for bidx in range(1, bpe + 1):
+            for bidx in tqdm(range(1, bpe + 1)):
                 try:
                     batch = next(iterator)
                 except StopIteration:
